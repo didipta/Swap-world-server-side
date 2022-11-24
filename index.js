@@ -19,9 +19,20 @@ try{
  const CategoryCollection=client.db('Swap-World').collection("Category");
  app.post('/user', async (req, res) => {
     const user = req.body;
-    console.log(user);
-    const result = await UserCollection.insertOne(user);
-    res.send(result);
+    const email=user.email;
+    const query = { email }
+    const userinfo = await UserCollection.findOne(query);
+    if(userinfo===null)
+    {
+        const result = await UserCollection.insertOne(user);
+        res.send(result);
+    }
+    else
+    {
+        res.send(userinfo)
+    }
+   
+    
 });
 app.get('/user/:email', async (req, res) => {
     const email = req.params.email;
@@ -44,6 +55,17 @@ app.put('/usersstate/:id', async (req, res) => {
         }
     }
     const result = await UserCollection.updateOne(filter, updatedDoc, options);
+    res.send(result);
+});
+app.put('/makeadmin/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) }
+    const updatedDoc = {
+        $set:{
+            role:"Admin"
+        }
+    }
+    const result = await UserCollection.updateOne(query, updatedDoc);
     res.send(result);
 });
 app.get('/Category', async (req, res) => {
