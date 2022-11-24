@@ -68,6 +68,12 @@ app.put('/makeadmin/:id', async (req, res) => {
     const result = await UserCollection.updateOne(query, updatedDoc);
     res.send(result);
 });
+app.delete('/userdelete/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) };
+    const result = await UserCollection.deleteOne(query);
+    res.send(result);
+})
 app.get('/Category', async (req, res) => {
     
     const query = { }
