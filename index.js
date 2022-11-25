@@ -17,6 +17,7 @@ async function run(){
 try{
  const UserCollection=client.db('Swap-World').collection("User");
  const CategoryCollection=client.db('Swap-World').collection("Category");
+ const ProductCollection=client.db('Swap-World').collection("Products");
  app.post('/user', async (req, res) => {
     const user = req.body;
     const email=user.email;
@@ -48,12 +49,19 @@ app.get('/users', async (req, res) => {
 app.put('/usersstate/:id', async (req, res) => {
     const id = req.params.id;
     const filter = { _id: ObjectId(id) }
+    const filtertwo = { sellerid: id }
     const options = { upsert: true };
     const updatedDoc = {
         $set: {
             states: 'verified'
         }
     }
+    const updatedDoctwo = {
+        $set: {
+            sellerstates: 'verified'
+        }
+    }
+    const resulttwo = await ProductCollection.updateMany(filtertwo, updatedDoctwo,options);
     const result = await UserCollection.updateOne(filter, updatedDoc, options);
     res.send(result);
 });
@@ -77,11 +85,20 @@ app.delete('/userdelete/:id', async (req, res) => {
 app.get('/Category', async (req, res) => {
     
     const query = { }
-    const Category = await CategoryCollection.find(query).sort({_id:-1}).toArray();
+    const Category = await CategoryCollection.find(query).toArray();
     res.send(Category);
 })
-
-
+app.post('/product', async (req, res) => {
+    const product = req.body;
+    const result = await ProductCollection.insertOne(product);
+    res.send(result);
+});
+app.get('/productall', async (req, res) => {
+    
+    const query = { }
+    const product = await ProductCollection.find(query).sort({_id:-1}).toArray();
+    res.send(product);
+})
 }
 finally
 {
