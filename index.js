@@ -42,7 +42,8 @@ app.get('/user/:email', async (req, res) => {
     res.send(user);
 })
 app.get('/users', async (req, res) => {
-    const query = {  }
+    const role=req.query.role;
+    const query = { role }
     const user = await UserCollection.find(query).sort({_id:-1}).toArray();
     res.send(user);
 })
@@ -94,10 +95,29 @@ app.post('/product', async (req, res) => {
     res.send(result);
 });
 app.get('/productall', async (req, res) => {
-    
-    const query = { }
-    const product = await ProductCollection.find(query).sort({_id:-1}).toArray();
-    res.send(product);
+    const selleremail=req.query.email;
+    let query;
+    if(selleremail!=="")
+    {
+        query = { selleremail}
+        const product = await ProductCollection.find(query).sort({_id:-1}).toArray();
+         res.send(product);
+    }
+    else
+    {
+        query = { }
+        const product = await ProductCollection.find(query).sort({_id:-1}).toArray();
+        res.send(product);
+    }
+   
+})
+app.get('/productallshow/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) };
+    const querytwo = { category: id };
+    const Category = await CategoryCollection.findOne(query);
+    const Product = await ProductCollection.find(querytwo).sort({_id:-1}).toArray();
+    res.send({Category,Product});
 })
 }
 finally
