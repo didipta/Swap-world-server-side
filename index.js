@@ -80,7 +80,11 @@ app.put('/makeadmin/:id', async (req, res) => {
 app.delete('/userdelete/:id', async (req, res) => {
     const id = req.params.id;
     const query = { _id: ObjectId(id) };
+    const querytwo = { sellerid: id };
+
     const result = await UserCollection.deleteOne(query);
+    const resulttwo = await ProductCollection.deleteMany(querytwo);
+
     res.send(result);
 })
 app.get('/Category', async (req, res) => {
@@ -119,6 +123,24 @@ app.get('/productallshow/:id', async (req, res) => {
     const Product = await ProductCollection.find(querytwo).sort({_id:-1}).toArray();
     res.send({Category,Product});
 })
+app.delete('/productdelete/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) };
+    const result = await ProductCollection.deleteOne(query);
+    res.send(result);
+})
+app.put('/productadvertise/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) }
+    const options = { upsert: true };
+    const updatedDoc = {
+        $set:{
+            status:"advertised"
+        }
+    }
+    const result = await  ProductCollection.updateOne(query, updatedDoc,options);
+    res.send(result);
+});
 }
 finally
 {
