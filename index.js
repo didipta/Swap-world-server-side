@@ -18,6 +18,7 @@ try{
  const UserCollection=client.db('Swap-World').collection("User");
  const CategoryCollection=client.db('Swap-World').collection("Category");
  const ProductCollection=client.db('Swap-World').collection("Products");
+ const OrderCollection=client.db('Swap-World').collection("Orders");
  app.post('/user', async (req, res) => {
     const user = req.body;
     const email=user.email;
@@ -139,6 +140,20 @@ app.put('/productadvertise/:id', async (req, res) => {
         }
     }
     const result = await  ProductCollection.updateOne(query, updatedDoc,options);
+    res.send(result);
+});
+app.post('/order', async (req, res) => {
+    const order = req.body;
+    const id=order.p_id;
+    const query = { _id: ObjectId(id) }
+    const options = { upsert: true };
+    const updatedDoc = {
+        $set:{
+            status:"Sold out"
+        }
+    }
+    const resulttwo = await  ProductCollection.updateOne(query, updatedDoc,options);
+    const result = await OrderCollection.insertOne(order);
     res.send(result);
 });
 }
