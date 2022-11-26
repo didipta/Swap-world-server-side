@@ -161,7 +161,7 @@ app.get('/Category', async (req, res) => {
     const Category = await CategoryCollection.find(query).toArray();
     res.send(Category);
 })
-app.post('/product', async (req, res) => {
+app.post('/product',verifyJWT,verifySeller, async (req, res) => {
     const product = req.body;
     const result = await ProductCollection.insertOne(product);
     res.send(result);
@@ -232,7 +232,7 @@ app.post('/order', async (req, res) => {
     const result = await OrderCollection.insertOne(order);
     res.send(result);
 });
-app.get('/ordertall', async (req, res) => {
+app.get('/ordertall',verifyJWT, async (req, res) => {
     const orderemail=req.query.email;
     const ordertype=req.query.type;
     console.log(ordertype,orderemail)
