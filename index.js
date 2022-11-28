@@ -5,6 +5,7 @@ const app = express();
 require('dotenv').config();
 var jwt = require('jsonwebtoken');
 const port=process.env.PORT || 5000;
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 app.use(cors());
 app.use(express.json());
 
@@ -37,6 +38,7 @@ try{
  const CategoryCollection=client.db('Swap-World').collection("Category");
  const ProductCollection=client.db('Swap-World').collection("Products");
  const OrderCollection=client.db('Swap-World').collection("Orders");
+ const WishListCollection=client.db('Swap-World').collection("WishList");
 
 
 
@@ -192,6 +194,7 @@ app.get('/advertiseproduct', async (req, res) => {
     
    
 })
+
 app.get('/productallshow/:id',verifyJWT, async (req, res) => {
     const id = req.params.id;
     const query = { _id: ObjectId(id) };
@@ -218,9 +221,12 @@ app.put('/productadvertise/:id', async (req, res) => {
     const result = await  ProductCollection.updateOne(query, updatedDoc,options);
     res.send(result);
 });
-app.post('/order', async (req, res) => {
+app.post('/order',verifyJWT, async (req, res) => {
     const order = req.body;
+
     const id=order.p_id;
+    const email=order.email;
+    const querytwo={productid:id}
     const query = { _id: ObjectId(id) }
     const options = { upsert: true };
     const updatedDoc = {
@@ -229,6 +235,7 @@ app.post('/order', async (req, res) => {
         }
     }
     const resulttwo = await  ProductCollection.updateOne(query, updatedDoc,options);
+    const resulthree = await  WishListCollection.updateMany(querytwo, updatedDoc,options);
     const result = await OrderCollection.insertOne(order);
     res.send(result);
 });
@@ -256,6 +263,69 @@ app.get('/ordertall',verifyJWT, async (req, res) => {
         res.send(product);
     }
    
+})
+app.post('/productwish',verifyJWT, async (req, res) => {
+    const product = req.body;
+    const email=req.body.email;
+    const id=product.productid;
+    const query = { email:email,productid:id}
+    const wishuser = await WishListCollection.findOne(query);
+    if(wishuser===null)
+    {
+        const result = await WishListCollection.insertOne(product);
+        res.send(result);
+    }
+    else
+    {
+        res.send("already add")
+    }
+    
+});
+app.get('/productwish',verifyJWT, async (req, res) => {
+    const wishemail=req.query.email;
+    query = {email:wishemail}
+    const product = await WishListCollection.find(query).sort({_id:-1}).toArray();
+    res.send(product);
+});
+
+app.post('/create-payment-intent',verifyJWT, async (req, res) => {
+    const booking = req.body;
+    const price = booking.p_price;
+    const amount = price * 100;
+
+    const paymentIntent = await stripe.paymentIntents.create({
+        currency: 'usd',
+        amount: amount,
+        "payment_method_types": [
+            "card"
+        ]
+    });
+    res.send({
+        clientSecret: paymentIntent.client_secret,
+    });
+});
+
+app.put('/paymant',verifyJWT,async (req, res)=>{
+    const orderid=req.query.id;
+    const order=req.body;
+    const productid=order.productid;
+    const query = { _id: ObjectId(orderid) }
+    const querytwo = { _id: ObjectId(productid) }
+    const options = { upsert: true };
+    const updatedDoctwo = {
+        $set:{
+            status:"Sold out"
+        }
+    }
+    const updatedDoc = {
+        $set:{
+            transactionId:order.transactionId,
+            sataus:"Sold out"
+        }
+    }
+    const resulttwo = await  ProductCollection.updateOne(querytwo, updatedDoctwo,options);
+    const result = await  OrderCollection.updateOne(query, updatedDoc,options);
+    res.send(result);
 })
 }
 finally
